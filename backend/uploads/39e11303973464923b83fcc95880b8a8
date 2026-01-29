@@ -1,0 +1,22 @@
+faculty_id,faculty_name,department,year,section,day,period_start,period_end,subject,subject_type,lab_batch,room
+F001,Dr.K.Velkumar,CSE,II,A,Monday,2,2,DBMS,Theory,,CSE-101
+F001,Dr.K.Velkumar,CSE,II,A,Monday,4,4,OS,Theory,,CSE-101
+F001,Dr.K.Velkumar,CSE,II,A,Friday,5,7,DBMS LAB,Lab,B1,DBMS-LAB
+F002,Ms.Anitha,CSE,III,A,Tuesday,1,1,AI,Theory,,CSE-201
+F002,Ms.Anitha,CSE,III,A,Tuesday,3,4,AI LAB,Lab,B1,AI-LAB
+F003,Mr.Ramesh,IT,II,B,Wednesday,2,2,DSA,Theory,,IT-101
+F003,Mr.Ramesh,IT,II,B,Wednesday,5,7,DSA LAB,Lab,B2,DSA-LAB
+F004,Ms.Priya,ECE,III,A,Thursday,1,1,DSP,Theory,,ECE-201
+F004,Ms.Priya,ECE,III,A,Thursday,3,5,DSP LAB,Lab,B1,ECE-LAB
+F005,Mr.Suresh,EEE,II,A,Monday,3,3,Power Systems,Theory,,EEE-101
+F005,Mr.Suresh,EEE,II,A,Monday,5,7,Power Systems LAB,Lab,B1,EEE-LAB
+F006,Ms.Kavitha,MECH,III,B,Tuesday,2,2,Thermodynamics,Theory,,MECH-201
+F006,Ms.Kavitha,MECH,III,B,Tuesday,4,6,Thermodynamics LAB,Lab,B2,MECH-LAB
+F007,Mr.Arjun,CIVIL,II,A,Wednesday,1,1,Structural Analysis,Theory,,CIVIL-101
+F007,Mr.Arjun,CIVIL,II,A,Wednesday,3,5,Survey LAB,Lab,B1,CIVIL-LAB
+F008,Ms.Rekha,AD,III,A,Thursday,2,2,Mobile App Dev,Theory,,AD-201
+F008,Ms.Rekha,AD,III,A,Thursday,4,6,MAD LAB,Lab,B1,AD-LAB
+F009,Mr.Vignesh,IT,III,A,Friday,1,1,Web Technologies,Theory,,IT-201
+F009,Mr.Vignesh,IT,III,A,Friday,3,5,WT LAB,Lab,B2,IT-LAB
+F010,Ms.Divya,CSE,I,A,Saturday,1,2,Python Programming,Theory,,CSE-001
+F010,Ms.Divya,CSE,I,A,Saturday,4,6,Python LAB,Lab,B1,CSE-LAB

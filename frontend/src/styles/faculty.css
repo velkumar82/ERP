@@ -1,0 +1,89 @@
+/* ===== FACULTY MANAGEMENT (ADMIN) ===== */
+
+.faculty-container {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* HEADER */
+.faculty-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.faculty-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #1f2937;
+}
+
+/* CREATE BUTTON */
+.btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #1e40af;
+}
+
+/* FORM */
+.faculty-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 15px 0;
+  background: #f9fafb;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.faculty-form input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.faculty-form button {
+  grid-column: span 2;
+  justify-self: flex-start;
+}
+
+/* TABLE */
+.faculty-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.faculty-table th {
+  background: #f3f4f6;
+  text-align: left;
+  padding: 10px;
+  font-weight: 600;
+}
+
+.faculty-table td {
+  padding: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.status-active {
+  color: green;
+  font-weight: bold;
+}
+
+/* EMPTY STATE */
+.no-data {
+  text-align: center;
+  color: #6b7280;
+  margin-top: 15px;
+}
