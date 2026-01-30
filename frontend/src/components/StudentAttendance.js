@@ -21,6 +21,7 @@ export default function StudentAttendance() {
   const [year, setYear] = useState("");
   const [section, setSection] = useState("");
   const [hour, setHour] = useState("");
+  const [subject, setSubject] = useState(""); // ✅ NEW
 
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
@@ -38,22 +39,38 @@ export default function StudentAttendance() {
   /* ===== DROPDOWN CASCADE ===== */
   useEffect(() => {
     setYears([...new Set(slots.filter(s => s.department === dept).map(s => s.year))]);
-    setYear(""); setSection(""); setHour("");
+    setYear(""); setSection(""); setHour(""); setSubject("");
   }, [dept]);
 
   useEffect(() => {
     setSections([...new Set(slots.filter(s => s.department === dept && s.year === year).map(s => s.section))]);
-    setSection(""); setHour("");
+    setSection(""); setHour(""); setSubject("");
   }, [year]);
 
   useEffect(() => {
-    setHours(
-      slots
-        .filter(s => s.department === dept && s.year === year && s.section === section)
-        .map(s => s.hour)
+    const filtered = slots.filter(
+      s => s.department === dept && s.year === year && s.section === section
     );
+
+    setHours(filtered.map(s => s.hour));
     setHour("");
+    setSubject("");
   }, [section]);
+
+  /* ===== SET SUBJECT WHEN HOUR SELECTED ===== */
+  useEffect(() => {
+    if (!hour) return;
+
+    const slot = slots.find(
+      s =>
+        s.department === dept &&
+        s.year === year &&
+        s.section === section &&
+        s.hour === Number(hour)
+    );
+
+    setSubject(slot?.subject || "");
+  }, [hour]);
 
   /* ===== LOAD LOCKED HOURS ===== */
   useEffect(() => {
@@ -81,11 +98,12 @@ export default function StudentAttendance() {
     const records = students.map(s => ({
       date: todayDate,
       day: todayDay,
-      hour,
+      hour: Number(hour),
       facultyId,
       department: dept,
       year,
       section,
+      subject,                  // ✅ STORED
       registerNo: s.registerNo,
       status: attendance[s.registerNo] || "Present"
     }));
@@ -96,7 +114,7 @@ export default function StudentAttendance() {
         records
       );
       alert("Attendance submitted & hour locked");
-      setLockedHours([...lockedHours, hour]);
+      setLockedHours([...lockedHours, Number(hour)]);
     } catch (err) {
       alert(err.response?.data?.message || "Error");
     }
@@ -122,7 +140,7 @@ export default function StudentAttendance() {
           {sections.map(s => <option key={s}>{s}</option>)}
         </select>
 
-        <select onChange={e => setHour(Number(e.target.value))}>
+        <select onChange={e => setHour(e.target.value)}>
           <option value="">Hour</option>
           {hours.map(h => (
             <option key={h} value={h} disabled={lockedHours.includes(h)}>
@@ -131,6 +149,13 @@ export default function StudentAttendance() {
           ))}
         </select>
       </div>
+
+      {/* ✅ SHOW SUBJECT (AUTO) */}
+      {subject && (
+        <p style={{ marginTop: 10 }}>
+          <strong>Subject:</strong> {subject}
+        </p>
+      )}
 
       {students.length > 0 && (
         <>
