@@ -1,24 +1,35 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+
 const timetableRoutes = require("./routes/timetable.routes");
-const userRoutes = require("./routes/user.routes");
-const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/User.routes");
 const attendanceRoutes = require("./routes/attendance.routes");
 
+require("./cron/clIncrement");
+
 const app = express();
+
+/* ===== MIDDLEWARE ===== */
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect("mongodb://127.0.0.1:27017/erp");
+/* ===== DATABASE ===== */
+mongoose
+  .connect("mongodb://127.0.0.1:27017/erp")
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.error(err));
 
-app.use("/api/timetable", require("./routes/timetable.routes"));
-app.use("/api/attendance", require("./routes/attendance.routes"));
-app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes);
+/* ===== ROUTES ===== */
+app.use("/api/timetable", timetableRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use(express.json());
+app.use("/api/users", userRoutes);
+app.use("/api/topic", require("./routes/topic.routes"));
+app.use("/api/leave", require("./routes/leave.routes"));
+app.use("/api/biometric", require("./routes/biometric.routes"));
 
+
+/* ===== SERVER ===== */
 app.listen(5000, () =>
   console.log("ERP Backend running on http://localhost:5000")
 );

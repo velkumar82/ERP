@@ -21,13 +21,18 @@ export default function StudentAttendance() {
   const [year, setYear] = useState("");
   const [section, setSection] = useState("");
   const [hour, setHour] = useState("");
-  const [subject, setSubject] = useState(""); // ✅ NEW
+  const [subject, setSubject] = useState("");
 
+  const [topicTaken, setTopicTaken] = useState("");   // ✅ NEW
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
 
-  /* ===== LOAD TODAY TIMETABLE ===== */
+  /* =========================
+     LOAD TODAY TIMETABLE
+     ========================= */
   useEffect(() => {
+    if (!facultyId) return;
+
     axios
       .get(`http://localhost:5000/api/attendance/hours/${facultyId}`)
       .then(res => {
@@ -36,28 +41,30 @@ export default function StudentAttendance() {
       });
   }, [facultyId]);
 
-  /* ===== DROPDOWN CASCADE ===== */
+  /* =========================
+     DROPDOWN CASCADE
+     ========================= */
   useEffect(() => {
     setYears([...new Set(slots.filter(s => s.department === dept).map(s => s.year))]);
-    setYear(""); setSection(""); setHour(""); setSubject("");
+    setYear(""); setSection(""); setHour(""); setSubject(""); setTopicTaken("");
   }, [dept]);
 
   useEffect(() => {
     setSections([...new Set(slots.filter(s => s.department === dept && s.year === year).map(s => s.section))]);
-    setSection(""); setHour(""); setSubject("");
+    setSection(""); setHour(""); setSubject(""); setTopicTaken("");
   }, [year]);
 
   useEffect(() => {
     const filtered = slots.filter(
       s => s.department === dept && s.year === year && s.section === section
     );
-
     setHours(filtered.map(s => s.hour));
-    setHour("");
-    setSubject("");
+    setHour(""); setSubject(""); setTopicTaken("");
   }, [section]);
 
-  /* ===== SET SUBJECT WHEN HOUR SELECTED ===== */
+  /* =========================
+     SET SUBJECT
+     ========================= */
   useEffect(() => {
     if (!hour) return;
 
@@ -72,7 +79,9 @@ export default function StudentAttendance() {
     setSubject(slot?.subject || "");
   }, [hour]);
 
-  /* ===== LOAD LOCKED HOURS ===== */
+  /* =========================
+     LOAD LOCKED HOURS
+     ========================= */
   useEffect(() => {
     if (!dept || !year || !section) return;
 
@@ -82,7 +91,9 @@ export default function StudentAttendance() {
     .then(res => setLockedHours(res.data));
   }, [dept, year, section]);
 
-  /* ===== LOAD STUDENTS ===== */
+  /* =========================
+     LOAD STUDENTS
+     ========================= */
   useEffect(() => {
     if (!dept || !year || !section || !hour) return;
 
@@ -93,8 +104,16 @@ export default function StudentAttendance() {
       .then(res => setStudents(res.data));
   }, [hour]);
 
-  /* ===== SUBMIT ===== */
+  /* =========================
+     SUBMIT ATTENDANCE + TOPIC
+     ========================= */
   const submitAttendance = async () => {
+
+    if (!topicTaken.trim()) {
+      alert("Please enter Topic Taken");
+      return;
+    }
+
     const records = students.map(s => ({
       date: todayDate,
       day: todayDay,
@@ -103,20 +122,39 @@ export default function StudentAttendance() {
       department: dept,
       year,
       section,
-      subject,                  // ✅ STORED
+      subject,
       registerNo: s.registerNo,
       status: attendance[s.registerNo] || "Present"
     }));
 
     try {
+      // 1️⃣ Save attendance
       await axios.post(
         "http://localhost:5000/api/attendance/mark",
         records
       );
-      alert("Attendance submitted & hour locked");
+
+      // 2️⃣ Save topic taken (separate collection)
+      await axios.post(
+        "http://localhost:5000/api/topic/save",
+        {
+          date: todayDate,
+          department: dept,
+          year,
+          section,
+          facultyId,
+          subject,
+          topic: topicTaken
+        }
+      );
+
+      alert("Attendance & Topic saved successfully");
+
       setLockedHours([...lockedHours, Number(hour)]);
+      setTopicTaken("");
+
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      alert(err.response?.data?.message || "Error submitting attendance");
     }
   };
 
@@ -150,11 +188,21 @@ export default function StudentAttendance() {
         </select>
       </div>
 
-      {/* ✅ SHOW SUBJECT (AUTO) */}
+      {/* SUBJECT + TOPIC */}
       {subject && (
-        <p style={{ marginTop: 10 }}>
-          <strong>Subject:</strong> {subject}
-        </p>
+        <>
+          <p style={{ marginTop: 10 }}>
+            <strong>Subject:</strong> {subject}
+          </p>
+
+          <input
+            type="text"
+            placeholder="Topic Taken"
+            value={topicTaken}
+            onChange={e => setTopicTaken(e.target.value)}
+            style={{ width: "100%", marginTop: 8 }}
+          />
+        </>
       )}
 
       {students.length > 0 && (

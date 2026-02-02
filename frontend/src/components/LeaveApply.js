@@ -1,148 +1,237 @@
-import { useState } from "react";
-import "../styles/dashboard.css";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import "../styles/leave.css";
 
-/* Convert date → day name */
-const getDayFromDate = (dateStr) => {
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
-  ];
-  return days[new Date(dateStr).getDay()];
-};
+/* Convert date to weekday */
+const getDayName = (dateStr) =>
+  new Date(dateStr).toLocaleDateString("en-US", { weekday: "long" });
 
-export default function LeaveApply({ remainingCL, applyLeave }) {
+export default function LeaveApply({ remainingCL }) {
+  const user = JSON.parse(localStorage.getItem("erpUser"));
 
   const [leaveType, setLeaveType] = useState("");
-  const [date, setDate] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [session, setSession] = useState("");
-  const [adjustmentClasses, setAdjustmentClasses] = useState([]);
+  const [reason, setReason] = useState("");
+
+  const [classes, setClasses] = useState([]);
+  const [facultyList, setFacultyList] = useState([]);
   const [showAdjustment, setShowAdjustment] = useState(false);
 
-  /* ===== SAMPLE FACULTY TIMETABLE (REPLACE WITH DB/API LATER) ===== */
-  const facultyTimetable = [
-    { day: "Monday", hour: 2, subject: "DBMS", section: "CSE II A" },
-    { day: "Friday", hour: 5, subject: "DBMS", section: "CSE II A" },
-    { day: "Friday", hour: 6, subject: "DBMS", section: "CSE II A" },
-    { day: "Friday", hour: 7, subject: "DBMS", section: "CSE II A" }
-  ];
+  /* Load faculty list for adjustment */
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/users")
+      .then(res => setFacultyList(res.data))
+      .catch(() => setFacultyList([]));
+  }, []);
 
-  /* ===== APPLY LEAVE ===== */
-  const handleApply = () => {
-    if (!leaveType || !date || !session) {
-      alert("Please fill all fields");
+  /* ----------------------------------------
+      SUBMIT FINAL LEAVE (WITH / WITHOUT ADJ)
+     --------------------------------------- */
+  const submitLeave = async (adjustments) => {
+
+    // Adjustment validation
+    if (adjustments.length > 0) {
+      const missing = adjustments.some(a => !a.adjustedFacultyId);
+      if (missing) {
+        alert("Please select adjusting faculty for all classes");
+        return;
+      }
+    }
+
+    try {
+      await axios.post("http://localhost:5000/api/leave/apply", {
+        facultyId: user.userId,
+        facultyName: user.username,
+        designation: user.designation,
+        department: user.department,
+
+        leaveType,
+        fromDate,
+        toDate,
+        session,
+        reason,
+
+        adjustments,
+        status: "Pending-HOD"
+      });
+
+      alert("Leave applied successfully");
+
+      // Reset
+      setClasses([]);
+      setShowAdjustment(false);
+      setLeaveType("");
+      setFromDate("");
+      setToDate("");
+      setSession("");
+      setReason("");
+
+    } catch (err) {
+      console.error(err);
+      alert("Error applying leave");
+    }
+  };
+
+  /* ----------------------------------------
+      MAIN APPLY LOGIC
+     --------------------------------------- */
+  const applyLeave = async () => {
+
+    if (!leaveType || !fromDate || !toDate || !session || !reason) {
+      alert("All fields are required");
       return;
     }
 
     if (leaveType === "CL" && remainingCL <= 0) {
-      alert("CL not available. Please select LOP.");
+      alert("No CL available. Select LOP.");
       return;
     }
 
-    const leaveDay = getDayFromDate(date);
-
-    // 🔥 THIS IS THE FIX: check timetable for SELECTED DAY
-    const dayClasses = facultyTimetable.filter(
-      t => t.day === leaveDay
+    // Load timetable from DB
+    const ttRes = await axios.get(
+      `http://localhost:5000/api/timetable/faculty/${user.userId}`
     );
+    const timetable = ttRes.data;
 
-    if (dayClasses.length > 0) {
-      setAdjustmentClasses(dayClasses);
-      setShowAdjustment(true);
-    } else {
-      alert(`Leave applied successfully. No classes on ${leaveDay}.`);
-      applyLeave({
-        leaveType,
-        date,
-        session,
-        status: "Pending"
+    // Determine valid hours
+    let validHours = [];
+    if (session === "FN") validHours = [1, 2, 3, 4];
+    else if (session === "AN") validHours = [5, 6, 7];
+    else validHours = [1, 2, 3, 4, 5, 6, 7];
+
+    const affected = [];
+
+    // Loop through date range
+    for (let d = new Date(fromDate); d <= new Date(toDate); d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayName = getDayName(dateStr);
+
+      timetable.forEach(t => {
+        if (t.day === dayName && validHours.includes(t.hour)) {
+          affected.push({
+            date: dateStr,
+            hour: t.hour,
+            subject: t.subject,
+            section: `${t.department} ${t.year} ${t.section}`,
+            adjustedFacultyId: ""
+          });
+        }
       });
-      setShowAdjustment(false);
+    }
+
+    // If NO classes → submit directly
+    if (affected.length === 0) {
+      submitLeave([]);
+    } else {
+      // Showing adjustment UI
+      setClasses(affected);
+      setShowAdjustment(true);
     }
   };
 
-  /* ===== FINAL SUBMIT WITH ADJUSTMENT ===== */
-  const submitWithAdjustment = () => {
-    applyLeave({
-      leaveType,
-      date,
-      session,
-      status: "Pending",
-      adjustment: adjustmentClasses
-    });
-    setShowAdjustment(false);
-  };
-
   return (
-    <div className="leave-container">
+    <div className="leave-card">
 
-      <h3 className="leave-title">Leave Application</h3>
+      <h2 className="leave-title">Leave Application</h2>
 
-      {/* ===== FORM ===== */}
-      <div className="leave-form">
+      {/* ========= FORM ========= */}
+      <div className="leave-form-grid">
 
-        <div className="leave-row">
+        <div>
           <label>Leave Type</label>
-          <select onChange={(e) => setLeaveType(e.target.value)}>
+          <select value={leaveType} onChange={(e) => setLeaveType(e.target.value)}>
             <option value="">Select</option>
             <option value="CL">Casual Leave (CL)</option>
             <option value="LOP">Loss of Pay (LOP)</option>
           </select>
+          <small>Remaining CL: {remainingCL}</small>
         </div>
 
-        <div className="leave-row">
-          <label>Date</label>
-          <input type="date" onChange={(e) => setDate(e.target.value)} />
-        </div>
-
-        <div className="leave-row">
+        <div>
           <label>Session</label>
-          <select onChange={(e) => setSession(e.target.value)}>
+          <select value={session} onChange={(e) => setSession(e.target.value)}>
             <option value="">Select</option>
-            <option>FN</option>
-            <option>AN</option>
-            <option>Full Day</option>
+            <option value="FN">FN </option>
+            <option value="AN">AN </option>
+            <option value="Full Day">Full Day </option>
           </select>
         </div>
 
-        <div className="leave-actions">
-          <button className="btn-primary" onClick={handleApply}>
-            Apply Leave
-          </button>
+        <div>
+          <label>From Date</label>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label>To Date</label>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+        </div>
+
+        <div className="full-width">
+          <label>Reason</label>
+          <textarea
+            rows={3}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          ></textarea>
         </div>
       </div>
 
-      {/* ===== ADJUSTMENT SECTION ===== */}
+      <button className="btn-primary" onClick={applyLeave}>
+        Apply Leave
+      </button>
+
+      {/* ========= ADJUSTMENT UI ========= */}
       {showAdjustment && (
-        <div className="adjustment-box">
+        <div className="adjustment-container">
+          <h3>Class Adjustment Required</h3>
 
-          <h4>Class Adjustment Required</h4>
-
-          <table className="timetable">
+          <table className="adjustment-table">
             <thead>
               <tr>
+                <th>Date</th>
                 <th>Hour</th>
                 <th>Subject</th>
                 <th>Section</th>
-                <th>Adjusting Faculty</th>
+                <th>Adjust Faculty</th>
               </tr>
             </thead>
             <tbody>
-              {adjustmentClasses.map((c, i) => (
+              {classes.map((c, i) => (
                 <tr key={i}>
+                  <td>{c.date}</td>
                   <td>{c.hour}</td>
                   <td>{c.subject}</td>
                   <td>{c.section}</td>
+
                   <td>
-                    <select>
-                      <option>Select Faculty</option>
-                      <option>Dr. Anand</option>
-                      <option>Ms. Priya</option>
-                      <option>Mr. Ramesh</option>
+                    <select
+                      value={c.adjustedFacultyId}
+                      onChange={(e) => {
+                        const updated = [...classes];
+                        updated[i] = {
+                          ...updated[i],
+                          adjustedFacultyId: e.target.value
+                        };
+                        setClasses(updated);
+                      }}
+                    >
+                      <option value="">Select Faculty</option>
+                      {facultyList.map((f) => (
+                        <option key={f.userId} value={f.userId}>
+                          {f.username}
+                        </option>
+                      ))}
                     </select>
                   </td>
                 </tr>
@@ -150,13 +239,15 @@ export default function LeaveApply({ remainingCL, applyLeave }) {
             </tbody>
           </table>
 
-          <div className="leave-actions">
-            <button className="btn-primary" onClick={submitWithAdjustment}>
-              Submit Leave with Adjustment
-            </button>
-          </div>
+          <button
+            className="btn-primary"
+            onClick={() => submitLeave(classes)}
+          >
+            Submit Leave with Adjustment
+          </button>
         </div>
       )}
+
     </div>
   );
 }

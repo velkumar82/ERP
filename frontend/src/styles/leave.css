@@ -1,0 +1,69 @@
+.leave-card {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 900px;
+  margin: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.leave-heading {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.leave-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.leave-form-grid label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.leave-form-grid select,
+.leave-form-grid input,
+.leave-form-grid textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.leave-form-grid small {
+  color: #555;
+}
+
+.full-width {
+  grid-column: span 2;
+}
+
+.leave-btn-row {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.adjustment-section {
+  margin-top: 30px;
+}
+
+.adjustment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.adjustment-table th,
+.adjustment-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.adjustment-table th {
+  background-color: #f2f4f6;
+}

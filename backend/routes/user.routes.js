@@ -1,50 +1,35 @@
 const express = require("express");
+const router = express.Router();
 const User = require("../models/User");
 
-const router = express.Router();
-
-/* ===== CREATE FACULTY USER (ADMIN) ===== */
-router.post("/create-faculty", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
-    const {
-      userId,
-      name,
-      department,
-      email,
-      mobile
-    } = req.body;
+    const { userId, password } = req.body;
 
-    const exists = await User.findOne({ userId });
-    if (exists) {
-      return res.status(400).json({ message: "Faculty ID already exists" });
+    const user = await User.findOne({ userId });
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
     }
 
-    const user = new User({
-      userId,
-      name,
-      department,
-      email,
-      mobile,
-      role: "Faculty",
-      password: userId + "@123"   // default password
-    });
-
-    await user.save();
+    if (user.password.trim() !== password.trim()) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
 
     res.json({
-      message: "Faculty user created successfully",
-      defaultPassword: user.password
+      user: {
+        userId: user.userId,
+        username: user.username,
+        role: user.role,
+        department: user.department,
+        designation: user.designation
+      }
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ message: "Server error" });
   }
-});
-
-/* ===== GET ALL FACULTY (ADMIN) ===== */
-router.get("/faculty", async (req, res) => {
-  const users = await User.find({ role: "Faculty" });
-  res.json(users);
 });
 
 module.exports = router;

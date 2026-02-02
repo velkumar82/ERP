@@ -14,26 +14,49 @@ export default function Login() {
   const handleLogin = async () => {
     setError("");
 
+    // ===== BASIC VALIDATION =====
     if (!userId || !password || !role) {
       setError("All fields are required");
       return;
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        userId,
-        password,
-        role: role === "admin" ? "Admin" : "Faculty"
-      });
+      // ===== API CALL =====
+      const res = await axios.post(
+        "http://localhost:5000/api/users/login",
+        {
+          userId: userId.trim(),
+          password: password.trim()
+        }
+      );
 
-      // Save login session
-      localStorage.setItem("erpUser", JSON.stringify(res.data.user));
+      const user = res.data.user;
 
-      // Role-based navigation
-      if (res.data.user.role === "Admin") {
-        navigate("/admin");
-      } else {
-        navigate("/faculty");
+      // ===== ROLE CHECK (CASE SAFE) =====
+      if (user.role.toLowerCase() !== role.toLowerCase()) {
+        setError("Unauthorized role");
+        return;
+      }
+
+      // ===== SAVE SESSION =====
+      localStorage.setItem("erpUser", JSON.stringify(user));
+
+      // ===== ROLE BASED REDIRECT =====
+      switch (user.role) {
+        case "Admin":
+          navigate("/admin");
+          break;
+        case "Faculty":
+          navigate("/faculty");
+          break;
+        case "HOD":
+          navigate("/hod");
+          break;
+        case "Principal":
+          navigate("/principal");
+          break;
+        default:
+          setError("Invalid user role");
       }
 
     } catch (err) {
@@ -63,14 +86,18 @@ export default function Login() {
 
       <select value={role} onChange={e => setRole(e.target.value)}>
         <option value="">Select Role</option>
-        <option value="admin">Admin</option>
-        <option value="faculty">Faculty</option>
+        <option value="Admin">Admin</option>
+        <option value="Faculty">Faculty</option>
+        <option value="HOD">HOD</option>
+        <option value="Principal">Principal</option>
       </select>
 
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleLogin}>
+        Login
+      </button>
 
       {error && (
-        <p style={{ color: "red", textAlign: "center" }}>
+        <p style={{ color: "red", marginTop: "10px" }}>
           {error}
         </p>
       )}

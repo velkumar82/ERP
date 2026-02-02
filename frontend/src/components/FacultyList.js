@@ -3,90 +3,109 @@ import axios from "axios";
 import "../styles/faculty.css";
 
 export default function FacultyList() {
-  const [faculty, setFaculty] = useState([]);
+
+  const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
     userId: "",
-    name: "",
+    username: "",
+    designation: "",
     department: "",
+    role: "Faculty",      // ✅ DEFAULT ROLE
     email: "",
-    mobile: ""
+    password: ""
   });
 
-  /* ===== LOAD FACULTY LIST ===== */
-  const loadFaculty = async () => {
+  /* =========================
+     LOAD USERS
+     ========================= */
+  const loadUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/users/faculty");
-      setFaculty(res.data);
+      const res = await axios.get("http://localhost:5000/api/users");
+      setUsers(res.data);
     } catch (err) {
-      console.error("Error loading faculty", err);
+      console.error("Error loading users", err);
     }
   };
 
   useEffect(() => {
-    loadFaculty();
+    loadUsers();
   }, []);
 
-  /* ===== CREATE FACULTY ===== */
+  /* =========================
+     CREATE USER
+     ========================= */
   const handleCreate = async () => {
-    if (!form.userId || !form.name || !form.department) {
-      alert("Faculty ID, Name and Department are required");
+
+    if (!form.userId || !form.username || !form.department || !form.role) {
+      alert("User ID, Name, Department and Role are required");
       return;
     }
 
     try {
-      await axios.post("http://localhost:5000/api/users/create-faculty", form);
+      await axios.post("http://localhost:5000/api/users/create", {
+        ...form,
+        password: form.password || `${form.userId}@123`
+      });
 
-      alert(
-        `Faculty created successfully\nDefault Password: ${form.userId}@123`
-      );
+      alert(`User created successfully\nDefault Password: ${form.password || `${form.userId}@123`}`);
 
       setForm({
         userId: "",
-        name: "",
+        username: "",
+        designation: "",
         department: "",
+        role: "Faculty",
         email: "",
-        mobile: ""
+        password: ""
       });
 
       setShowForm(false);
-      loadFaculty();
+      loadUsers();
 
     } catch (err) {
-      alert(err.response?.data?.message || "Error creating faculty");
+      alert(err.response?.data?.message || "Error creating user");
     }
   };
 
   return (
     <div className="card faculty-container">
 
-      {/* HEADER */}
+      {/* ===== HEADER ===== */}
       <div className="faculty-header">
-        <h3>Faculty Management</h3>
+        <h3>User Management</h3>
         <button
           className="btn-primary"
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? "Close" : "+ Create Faculty"}
+          {showForm ? "Close" : "+ Create User"}
         </button>
       </div>
 
-      {/* CREATE FORM */}
+      {/* ===== CREATE FORM ===== */}
       {showForm && (
         <div className="faculty-form">
+
           <input
             type="text"
-            placeholder="Faculty ID (Eg: F001)"
+            placeholder="User ID (Eg: F001)"
             value={form.userId}
             onChange={e => setForm({ ...form, userId: e.target.value })}
           />
 
           <input
             type="text"
-            placeholder="Faculty Name"
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
+            placeholder="Name"
+            value={form.username}
+            onChange={e => setForm({ ...form, username: e.target.value })}
+          />
+
+          <input
+            type="text"
+            placeholder="Designation"
+            value={form.designation}
+            onChange={e => setForm({ ...form, designation: e.target.value })}
           />
 
           <input
@@ -96,6 +115,17 @@ export default function FacultyList() {
             onChange={e => setForm({ ...form, department: e.target.value })}
           />
 
+          {/* ✅ ROLE DROPDOWN */}
+          <select
+            value={form.role}
+            onChange={e => setForm({ ...form, role: e.target.value })}
+          >
+            <option value="Faculty">Faculty</option>
+            <option value="HOD">HOD</option>
+            <option value="Principal">Principal</option>
+            <option value="Admin">Admin</option>
+          </select>
+
           <input
             type="email"
             placeholder="Email"
@@ -104,43 +134,43 @@ export default function FacultyList() {
           />
 
           <input
-            type="text"
-            placeholder="Mobile"
-            value={form.mobile}
-            onChange={e => setForm({ ...form, mobile: e.target.value })}
+            type="password"
+            placeholder="Password (optional)"
+            value={form.password}
+            onChange={e => setForm({ ...form, password: e.target.value })}
           />
 
           <button className="btn-primary" onClick={handleCreate}>
-            Save Faculty
+            Save User
           </button>
         </div>
       )}
 
-      {/* FACULTY TABLE */}
-      {faculty.length === 0 ? (
-        <p className="no-data">No faculty records found</p>
+      {/* ===== USER TABLE ===== */}
+      {users.length === 0 ? (
+        <p className="no-data">No user records found</p>
       ) : (
         <table className="faculty-table">
           <thead>
             <tr>
-              <th>Faculty ID</th>
+              <th>User ID</th>
               <th>Name</th>
+              <th>Designation</th>
               <th>Department</th>
+              <th>Role</th>
               <th>Email</th>
-              <th>Mobile</th>
-              <th>Status</th>
             </tr>
           </thead>
 
           <tbody>
-            {faculty.map((f, index) => (
+            {users.map((u, index) => (
               <tr key={index}>
-                <td>{f.userId}</td>
-                <td>{f.name}</td>
-                <td>{f.department}</td>
-                <td>{f.email || "-"}</td>
-                <td>{f.mobile || "-"}</td>
-                <td className="status-active">{f.status}</td>
+                <td>{u.userId}</td>
+                <td>{u.username}</td>
+                <td>{u.designation || "-"}</td>
+                <td>{u.department || "-"}</td>
+                <td className="status-active">{u.role}</td>
+                <td>{u.email || "-"}</td>
               </tr>
             ))}
           </tbody>

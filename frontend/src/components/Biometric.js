@@ -1,75 +1,43 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import "../styles/dashboard.css";
 
-export default function Biometric({ leaves = [] }) {
+export default function Biometric() {
+
+  const user = JSON.parse(localStorage.getItem("erpUser"));
 
   const [year, setYear] = useState("2025-2026");
-  const [month, setMonth] = useState("01"); // January
+  const [month, setMonth] = useState("01");
   const [records, setRecords] = useState([]);
 
-  /* ===== HELPERS ===== */
-
-  const academicYearMap = {
-    "2024-2025": 2024,
-    "2025-2026": 2025,
-    "2026-2027": 2026
-  };
-
-  const getLeaveRemark = (date) => {
-    const leave = leaves.find(l => l.date === date);
-    if (!leave) return "";
-    if (leave.status === "Pending") return "Pending Approval";
-    return leave.leaveType; // CL or LOP
-  };
-
-  /* ===== GENERATE MONTH DATA ===== */
   useEffect(() => {
-    const baseYear = academicYearMap[year];
-    const monthIndex = parseInt(month) - 1;
-    const daysInMonth = new Date(baseYear, monthIndex + 1, 0).getDate();
+    if (!user) return;
 
-    const temp = [];
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateObj = new Date(baseYear, monthIndex, d);
-      const dateStr = dateObj.toISOString().split("T")[0];
-      const dayName = dateObj.toLocaleDateString("en-US", { weekday: "long" });
-
-      if (dayName === "Sunday") {
-        temp.push({
-          date: dateStr,
-          day: dayName,
-          in: "",
-          out: "",
-          remark: "Sunday"
-        });
-      } else {
-        temp.push({
-          date: dateStr,
-          day: dayName,
-          in: "",
-          out: "",
-          remark: getLeaveRemark(dateStr)
-        });
+    axios.get("http://localhost:5000/api/biometric", {
+      params: {
+        facultyId: user.userId,
+        academicYear: year,
+        month
       }
-    }
+    })
+    .then(res => setRecords(res.data))
+    .catch(() => setRecords([]));
 
-    setRecords(temp);
-  }, [year, month, leaves]);
+  }, [year, month]);
 
   return (
     <div className="card">
       <h3>Biometric Attendance</h3>
 
-      {/* ===== FILTERS ===== */}
-      <div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
-        <select value={year} onChange={(e) => setYear(e.target.value)}>
+      {/* FILTER */}
+      <div style={{ display: "flex", gap: 15, marginBottom: 15 }}>
+        <select value={year} onChange={e => setYear(e.target.value)}>
           <option>2024-2025</option>
           <option>2025-2026</option>
           <option>2026-2027</option>
         </select>
 
-        <select value={month} onChange={(e) => setMonth(e.target.value)}>
+        <select value={month} onChange={e => setMonth(e.target.value)}>
           <option value="01">January</option>
           <option value="02">February</option>
           <option value="03">March</option>
@@ -85,7 +53,7 @@ export default function Biometric({ leaves = [] }) {
         </select>
       </div>
 
-      {/* ===== BIOMETRIC TABLE ===== */}
+      {/* TABLE */}
       <table className="timetable">
         <thead>
           <tr>
@@ -97,15 +65,23 @@ export default function Biometric({ leaves = [] }) {
           </tr>
         </thead>
         <tbody>
-          {records.map((r, i) => (
-            <tr key={i}>
-              <td>{r.date}</td>
-              <td>{r.day}</td>
-              <td>{r.in}</td>
-              <td>{r.out}</td>
-              <td>{r.remark}</td>
+          {records.length === 0 ? (
+            <tr>
+              <td colSpan="5" style={{ textAlign: "center" }}>
+                No biometric data
+              </td>
             </tr>
-          ))}
+          ) : (
+            records.map((r, i) => (
+              <tr key={i}>
+                <td>{r.date}</td>
+                <td>{r.day}</td>
+                <td>{r.inTime}</td>
+                <td>{r.outTime}</td>
+                <td>{r.remark}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
