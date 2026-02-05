@@ -12,14 +12,14 @@ export default function FacultyList() {
     username: "",
     designation: "",
     department: "",
-    role: "Faculty",      // ✅ DEFAULT ROLE
+    role: "",
     email: "",
     password: ""
   });
 
   /* =========================
      LOAD USERS
-     ========================= */
+  ========================= */
   const loadUsers = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/users");
@@ -35,28 +35,35 @@ export default function FacultyList() {
 
   /* =========================
      CREATE USER
-     ========================= */
+  ========================= */
   const handleCreate = async () => {
 
-    if (!form.userId || !form.username || !form.department || !form.role) {
-      alert("User ID, Name, Department and Role are required");
+    if (!form.userId || !form.username || !form.designation || !form.department || !form.role) {
+      alert("User ID, Name, Designation, Department and Role are required");
       return;
     }
 
     try {
-      await axios.post("http://localhost:5000/api/users/create", {
-        ...form,
+      const payload = {
+        userId: form.userId.trim(),
+        username: form.username.trim(),
+        designation: form.designation.trim(),
+        department: form.department.trim(),
+        email: form.email.trim(),
+        role: form.role,
         password: form.password || `${form.userId}@123`
-      });
+      };
 
-      alert(`User created successfully\nDefault Password: ${form.password || `${form.userId}@123`}`);
+      await axios.post("http://localhost:5000/api/users/create", payload);
+
+      alert(`User created successfully\nDefault Password: ${payload.password}`);
 
       setForm({
         userId: "",
         username: "",
         designation: "",
         department: "",
-        role: "Faculty",
+        role: "",
         email: "",
         password: ""
       });
@@ -101,29 +108,44 @@ export default function FacultyList() {
             onChange={e => setForm({ ...form, username: e.target.value })}
           />
 
-          <input
-            type="text"
-            placeholder="Designation"
+          {/* DESIGNATION */}
+          <select
             value={form.designation}
             onChange={e => setForm({ ...form, designation: e.target.value })}
-          />
+          >
+            <option value="">Select Designation</option>
+            <option value="Assistant Professor">Assistant Professor</option>
+            <option value="Associate Professor">Associate Professor</option>
+            <option value="Professor">Professor</option>
+            <option value="HOD">HOD</option>
+            <option value="Principal">Principal</option>
+            <option value="Secretary">Secretary</option>
+          </select>
 
-          <input
-            type="text"
-            placeholder="Department"
+          {/* DEPARTMENT */}
+          <select
             value={form.department}
             onChange={e => setForm({ ...form, department: e.target.value })}
-          />
+          >
+            <option value="">Select Department</option>
+            <option value="CSE">CSE</option>
+            <option value="ECE">ECE</option>
+            <option value="MECH">Mechanical</option>
+            <option value="CIVIL">Civil</option>
+            <option value="ALL">ALL</option>
+          </select>
 
-          {/* ✅ ROLE DROPDOWN */}
+          {/* ROLE */}
           <select
             value={form.role}
             onChange={e => setForm({ ...form, role: e.target.value })}
           >
+            <option value="">Select Role</option>
             <option value="Faculty">Faculty</option>
             <option value="HOD">HOD</option>
             <option value="Principal">Principal</option>
             <option value="Admin">Admin</option>
+            <option value="Secretary">Secretary</option>
           </select>
 
           <input

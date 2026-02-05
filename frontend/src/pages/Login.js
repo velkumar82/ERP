@@ -14,14 +14,12 @@ export default function Login() {
   const handleLogin = async () => {
     setError("");
 
-    // ===== BASIC VALIDATION =====
     if (!userId || !password || !role) {
       setError("All fields are required");
       return;
     }
 
     try {
-      // ===== API CALL =====
       const res = await axios.post(
         "http://localhost:5000/api/users/login",
         {
@@ -32,16 +30,14 @@ export default function Login() {
 
       const user = res.data.user;
 
-      // ===== ROLE CHECK (CASE SAFE) =====
+      // 🔐 Role validation
       if (user.role.toLowerCase() !== role.toLowerCase()) {
         setError("Unauthorized role");
         return;
       }
 
-      // ===== SAVE SESSION =====
       localStorage.setItem("erpUser", JSON.stringify(user));
 
-      // ===== ROLE BASED REDIRECT =====
       switch (user.role) {
         case "Admin":
           navigate("/admin");
@@ -55,14 +51,15 @@ export default function Login() {
         case "Principal":
           navigate("/principal");
           break;
+        case "Secretary":
+          navigate("/secretary");
+          break;
         default:
-          setError("Invalid user role");
+          setError("Invalid role");
       }
 
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Server error"
-      );
+      setError(err.response?.data?.message || "Server error");
     }
   };
 
@@ -71,7 +68,6 @@ export default function Login() {
       <h2>ERP Login</h2>
 
       <input
-        type="text"
         placeholder="User ID"
         value={userId}
         onChange={e => setUserId(e.target.value)}
@@ -90,17 +86,12 @@ export default function Login() {
         <option value="Faculty">Faculty</option>
         <option value="HOD">HOD</option>
         <option value="Principal">Principal</option>
+        <option value="Secretary">Secretary</option>
       </select>
 
-      <button onClick={handleLogin}>
-        Login
-      </button>
+      <button onClick={handleLogin}>Login</button>
 
-      {error && (
-        <p style={{ color: "red", marginTop: "10px" }}>
-          {error}
-        </p>
-      )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import StudentAttendance from "../components/StudentAttendance";
 import FacultyTimetable from "../components/FacultyTimetable";
 import Biometric from "../components/Biometric";
 import LeaveManagement from "../components/LeaveManagement";
+import AlternateLeaveApproval from "../components/AlternateLeaveApproval";
+
 
 
 export default function FacultyDashboard() {
@@ -22,6 +24,8 @@ export default function FacultyDashboard() {
           <li onClick={() => setPage("timetable")}>My Timetable</li>
           <li onClick={() => setPage("attendance")}>Student Attendance</li>
           <li onClick={() => setPage("leave")}>Leave Management</li>
+           <li onClick={() => setPage("alternateApproval")}> Alternate Leave Approval
+    </li>
           <li onClick={() => setPage("reports")}>Reports</li>
           <li>Logout</li>
         </ul>
@@ -74,6 +78,7 @@ export default function FacultyDashboard() {
           {/* STUDENT ATTENDANCE */}
           {page === "attendance" && <StudentAttendance />}
           {page === "leave" && <LeaveManagement />}
+          {page === "alternateApproval" && <AlternateLeaveApproval />}
 
           {/* REPORTS */}
           {page === "reports" && (

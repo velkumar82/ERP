@@ -5,24 +5,45 @@ const AdjustmentSchema = new mongoose.Schema({
   hour: Number,
   subject: String,
   section: String,
-  adjustedFacultyId: String
+  adjustedFacultyId: String,
+  alternateStatus: {
+    type: String,
+    enum: ["Pending", "Approved", "Rejected"],
+    default: "Pending"
+  },
+  alternateReason: String
 }, { _id: false });
 
 const LeaveSchema = new mongoose.Schema({
   facultyId: String,
   facultyName: String,
   department: String,
-  designation: String,
+  role: String,
 
-  leaveType: String,     // CL / LOP
+  leaveType: String,
   fromDate: String,
   toDate: String,
-  session: String,
+  totalDays: Number,
   reason: String,
 
   adjustments: [AdjustmentSchema],
 
-  status: String,        // Pending-HOD / Pending-Principal / Approved / Rejected / Cancelled
+  status: {
+    type: String,
+    enum: [
+      "Pending-Alternate",
+      "Pending-HOD",
+      "Pending-Principal",
+      "Pending-Secretary",
+      "Approved",
+      "Rejected"
+    ],
+    default: "Pending-Alternate"
+  },
+
+  rejectionReason: String,
+  currentLevel: { type: Number, default: 0 },
+
   createdAt: { type: Date, default: Date.now }
 });
 

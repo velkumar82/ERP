@@ -5,6 +5,7 @@ const cors = require("cors");
 const timetableRoutes = require("./routes/timetable.routes");
 const userRoutes = require("./routes/User.routes");
 const attendanceRoutes = require("./routes/attendance.routes");
+const leaveRoutes = require("./routes/leave.routes");
 
 require("./cron/clIncrement");
 

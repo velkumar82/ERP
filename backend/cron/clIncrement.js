@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const User = require("../models/User");
+const User = require("../models/user");
 
 /*
   Runs on 1st of every month

@@ -4,12 +4,18 @@ import "../styles/dashboard.css";
 
 export default function StudentAttendance() {
 
+  /* =========================
+     USER & DATE
+     ========================= */
   const user = JSON.parse(localStorage.getItem("erpUser"));
   const facultyId = user?.userId;
 
   const todayDate = new Date().toISOString().slice(0, 10);
   const todayDay = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
+  /* =========================
+     STATES
+     ========================= */
   const [slots, setSlots] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [years, setYears] = useState([]);
@@ -23,7 +29,7 @@ export default function StudentAttendance() {
   const [hour, setHour] = useState("");
   const [subject, setSubject] = useState("");
 
-  const [topicTaken, setTopicTaken] = useState("");   // ✅ NEW
+  const [topicTaken, setTopicTaken] = useState("");
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
 
@@ -38,7 +44,8 @@ export default function StudentAttendance() {
       .then(res => {
         setSlots(res.data);
         setDepartments([...new Set(res.data.map(s => s.department))]);
-      });
+      })
+      .catch(() => {});
   }, [facultyId]);
 
   /* =========================
@@ -46,12 +53,21 @@ export default function StudentAttendance() {
      ========================= */
   useEffect(() => {
     setYears([...new Set(slots.filter(s => s.department === dept).map(s => s.year))]);
-    setYear(""); setSection(""); setHour(""); setSubject(""); setTopicTaken("");
+    setYear("");
+    setSection("");
+    setHour("");
+    setSubject("");
+    setTopicTaken("");
   }, [dept]);
 
   useEffect(() => {
-    setSections([...new Set(slots.filter(s => s.department === dept && s.year === year).map(s => s.section))]);
-    setSection(""); setHour(""); setSubject(""); setTopicTaken("");
+    setSections(
+      [...new Set(slots.filter(s => s.department === dept && s.year === year).map(s => s.section))]
+    );
+    setSection("");
+    setHour("");
+    setSubject("");
+    setTopicTaken("");
   }, [year]);
 
   useEffect(() => {
@@ -59,7 +75,9 @@ export default function StudentAttendance() {
       s => s.department === dept && s.year === year && s.section === section
     );
     setHours(filtered.map(s => s.hour));
-    setHour(""); setSubject(""); setTopicTaken("");
+    setHour("");
+    setSubject("");
+    setTopicTaken("");
   }, [section]);
 
   /* =========================
@@ -88,7 +106,8 @@ export default function StudentAttendance() {
     axios.get("http://localhost:5000/api/attendance/locked-hours", {
       params: { date: todayDate, department: dept, year, section }
     })
-    .then(res => setLockedHours(res.data));
+    .then(res => setLockedHours(res.data))
+    .catch(() => {});
   }, [dept, year, section]);
 
   /* =========================
@@ -101,11 +120,12 @@ export default function StudentAttendance() {
       .get("http://localhost:5000/api/attendance/students", {
         params: { department: dept, year, section }
       })
-      .then(res => setStudents(res.data));
+      .then(res => setStudents(res.data))
+      .catch(() => {});
   }, [hour]);
 
   /* =========================
-     SUBMIT ATTENDANCE + TOPIC
+     SUBMIT ATTENDANCE
      ========================= */
   const submitAttendance = async () => {
 
@@ -128,13 +148,13 @@ export default function StudentAttendance() {
     }));
 
     try {
-      // 1️⃣ Save attendance
+      // Save attendance
       await axios.post(
         "http://localhost:5000/api/attendance/mark",
         records
       );
 
-      // 2️⃣ Save topic taken (separate collection)
+      // Save topic taken
       await axios.post(
         "http://localhost:5000/api/topic/save",
         {
@@ -158,10 +178,16 @@ export default function StudentAttendance() {
     }
   };
 
+  /* =========================
+     UI
+     ========================= */
   return (
     <div className="card">
-      <h3>Student Attendance – {todayDay}</h3>
+      <h3>
+        Student Attendance – {todayDay} ({todayDate})
+      </h3>
 
+      {/* DROPDOWNS */}
       <div className="form-row">
         <select onChange={e => setDept(e.target.value)}>
           <option value="">Department</option>
@@ -205,11 +231,13 @@ export default function StudentAttendance() {
         </>
       )}
 
+      {/* STUDENT TABLE */}
       {students.length > 0 && (
         <>
           <table className="timetable">
             <thead>
               <tr>
+                <th>Date</th>
                 <th>Register No</th>
                 <th>Name</th>
                 <th>Status</th>
@@ -218,6 +246,7 @@ export default function StudentAttendance() {
             <tbody>
               {students.map(s => (
                 <tr key={s.registerNo}>
+                  <td>{todayDate}</td>
                   <td>{s.registerNo}</td>
                   <td>{s.name}</td>
                   <td>

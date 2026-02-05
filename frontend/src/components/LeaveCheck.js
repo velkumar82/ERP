@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import "../styles/leave.css";
 
 export default function LeaveCheck() {
 
   const user = JSON.parse(localStorage.getItem("erpUser"));
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({
+    totalCL: 0,
+    usedCL: 0,
+    remainingCL: 0,
+    leaves: []
+  });
   const [loading, setLoading] = useState(true);
 
   const loadSummary = async () => {
@@ -35,10 +41,10 @@ export default function LeaveCheck() {
     if (!window.confirm("Cancel this leave?")) return;
 
     try {
-      const res = await axios.put(
+      await axios.delete(
         `http://localhost:5000/api/leave/cancel/${id}`
       );
-      alert(res.data.message);
+      alert("Leave cancelled");
       loadSummary();
     } catch (err) {
       alert(err.response?.data?.message || "Cancel failed");
@@ -46,13 +52,12 @@ export default function LeaveCheck() {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (!data) return <p>No data</p>;
 
   return (
     <div className="card">
       <h3>Leave Summary</h3>
 
-      <table>
+      <table className="summary-table">
         <tbody>
           <tr><td>Total CL</td><td>{data.totalCL}</td></tr>
           <tr><td>Used CL</td><td>{data.usedCL}</td></tr>
@@ -65,39 +70,44 @@ export default function LeaveCheck() {
       {data.leaves.length === 0 ? (
         <p>No leave records</p>
       ) : (
-        <table>
+        <table className="leave-table">
           <thead>
             <tr>
               <th>From</th>
               <th>To</th>
               <th>Type</th>
+              <th>Days</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {data.leaves.map(l => {
-              const normalizedStatus = l.status.replace(/\s+/g, "-");
-
-              return (
-                <tr key={l._id}>
-                  <td>{l.fromDate}</td>
-                  <td>{l.toDate}</td>
-                  <td>{l.leaveType}</td>
-                  <td>{l.status}</td>
-                  <td>
-                    {["Pending-HOD", "Pending-Principal"].includes(normalizedStatus) && (
-                      <button
-                        className="btn-danger"
-                        onClick={() => cancelLeave(l._id)}
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {data.leaves.map(l => (
+              <tr key={l._id}>
+                <td>{l.fromDate}</td>
+                <td>{l.toDate}</td>
+                <td>{l.leaveType}</td>
+                <td>{l.totalDays}</td>
+                <td>{l.status}</td>
+                <td>
+                  {l.status === "Pending" && (
+                    <button
+                      className="btn-danger"
+                      onClick={() => cancelLeave(l._id)}
+                    >
+                      <td>
+  {l.status === "Rejected" && (
+    <span style={{ color: "red" }}>
+      {l.rejectionReason}
+    </span>
+  )}
+</td>
+                      Cancel
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}

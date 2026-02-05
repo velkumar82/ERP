@@ -5,6 +5,8 @@ import FacultyDashboard from "./pages/FacultyDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import HODDashboard from "./pages/HODDashboard";
 import PrincipalDashboard from "./pages/PrincipalDashboard";
+import SecretaryDashboard from "./pages/SecretaryDashboard";
+
 
 import "./styles/dashboard.css";
 import "./styles/timetable.css";
@@ -19,6 +21,7 @@ export default function App() {
         <Route path="/faculty" element={<FacultyDashboard />} />
         <Route path="/hod" element={<HODDashboard />} />
         <Route path="/principal" element={<PrincipalDashboard />} />
+        <Route path="/secretary" element={<SecretaryDashboard />} />
 
       </Routes>
     </BrowserRouter>

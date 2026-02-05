@@ -2,6 +2,7 @@ import { useState } from "react";
 import HODLeaveApproval from "../components/HODLeaveApproval";
 import DepartmentFacultyList from "../components/DepartmentFacultyList";
 import DepartmentStudentList from "../components/DepartmentStudentList";
+import LeaveManagement from "../components/LeaveManagement";
 
 export default function HODDashboard() {
 
@@ -15,6 +16,7 @@ export default function HODDashboard() {
         <h2 className="erp-logo">HOD Panel</h2>
         <ul>
           <li onClick={() => setTab("leave")}>Leave Approval</li>
+          <li onClick={() => setTab("leave")}>Leave Management</li>
           <li onClick={() => setTab("faculty")}>Department Faculty</li>
           <li onClick={() => setTab("students")}>Department Students</li>
         </ul>
@@ -28,6 +30,7 @@ export default function HODDashboard() {
 
         <div className="erp-content">
           {tab === "leave" && <HODLeaveApproval />}
+          {tab === "leaveMgmt" && <LeaveManagement />}
           {tab === "faculty" && <DepartmentFacultyList />}
           {tab === "students" && <DepartmentStudentList />}
         </div>

@@ -1,54 +1,128 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import "../styles/leave.css";
 
 export default function PrincipalLeaveApproval() {
-
   const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [reason, setReason] = useState("");
 
-  const load = async () => {
-    const res = await axios.get(
-      "http://localhost:5000/api/leave/pending/Principal"
-    );
-    setLeaves(res.data);
+  /* =========================
+     LOAD PENDING LEAVES
+     ========================= */
+  const loadLeaves = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/leave/principal/pending"
+      );
+      setLeaves(res.data);
+    } catch {
+      alert("Error fetching leave");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    loadLeaves();
+  }, []);
 
-  const act = async (id, action) => {
-    await axios.put(
-      `http://localhost:5000/api/leave/approve/${id}`,
-      { role: "Principal", action }
-    );
-    load();
+  /* =========================
+     APPROVE
+     ========================= */
+  const approveLeave = async (id) => {
+    if (!window.confirm("Approve this leave?")) return;
+
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/leave/principal/approve/${id}`
+      );
+      alert(res.data.message);
+      loadLeaves();
+    } catch {
+      alert("Approval failed");
+    }
   };
+
+  /* =========================
+     REJECT
+     ========================= */
+  const rejectLeave = async (id) => {
+    if (!reason.trim()) {
+      alert("Enter rejection reason");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/leave/hod/reject/${id}`,
+        { reason }
+      );
+      alert(res.data.message);
+      setReason("");
+      loadLeaves();
+    } catch {
+      alert("Rejection failed");
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="card">
       <h3>Principal Leave Approval</h3>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Faculty</th>
-            <th>Department</th>
-            <th>Dates</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leaves.map(l => (
-            <tr key={l._id}>
-              <td>{l.facultyName}</td>
-              <td>{l.department}</td>
-              <td>{l.fromDate} → {l.toDate}</td>
-              <td>
-                <button onClick={() => act(l._id, "Approve")}>Approve</button>
-                <button onClick={() => act(l._id, "Reject")}>Reject</button>
-              </td>
+      {leaves.length === 0 ? (
+        <p>No pending leave requests</p>
+      ) : (
+        <table className="timetable">
+          <thead>
+            <tr>
+              <th>Faculty</th>
+              <th>Department</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Type</th>
+              <th>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {leaves.map(l => (
+              <tr key={l._id}>
+                <td>{l.facultyName}</td>
+                <td>{l.department}</td>
+                <td>{l.fromDate}</td>
+                <td>{l.toDate}</td>
+                <td>{l.leaveType}</td>
+                <td>
+                  <button
+                    className="btn-success"
+                    onClick={() => approveLeave(l._id)}
+                  >
+                    Approve
+                  </button>
+
+                  <br /><br />
+
+                  <input
+                    type="text"
+                    placeholder="Reject reason"
+                    value={reason}
+                    onChange={e => setReason(e.target.value)}
+                  />
+
+                  <button
+                    className="btn-danger"
+                    onClick={() => rejectLeave(l._id)}
+                  >
+                    Reject
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
